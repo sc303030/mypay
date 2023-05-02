@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # third apps
     "debug_toolbar",
+    "django_bootstrap5",
     # local apps
     "accounts",
 ]
@@ -71,7 +72,7 @@ ROOT_URLCONF = "mypay.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
