@@ -1,10 +1,16 @@
+import logging
 from uuid import uuid4
 
+from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.http import Http404
+
+from iamport import Iamport
+
+logger = logging.getLogger("port one")
 
 
-# Create your models here.
 class Payment(models.Model):
     class StatusChoices(models.TextChoices):
         READY = "ready", "미결제"
@@ -30,4 +36,19 @@ class Payment(models.Model):
     def merchant_uid(self) -> str:
         return self.uid.hex
 
-    # TODO: 포트원 REST API를 통해서 결제를 검증해야만 한다.
+    # 포트원 REST API를 통해서 결제를 검증해야만 한다.
+    def portone_check(self, commit=True):
+        api = Iamport(
+            imp_key=settings.PORTONE_API_KEY, imp_secret=settings.PORTONE_API_SECRET
+        )
+        try:
+            meta = api.find(merchant_uid=self.merchant_uid)
+        except (Iamport.ResponseError, Iamport.HttpError) as e:
+            logger.error(str(e), exc_info=e)
+            raise Http404(str(e))
+
+        self.status = meta["status"]
+        self.is_paid_ok = meta["status"] == "paid" and meta["amount"] == self.amount
+        # TODO: meta 속성을 JSONField 저장
+        if commit:
+            self.save()
