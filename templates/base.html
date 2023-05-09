@@ -14,6 +14,7 @@
         {% bootstrap_javascript %}
     </head>
     <body>
+
         <header class="p-3 mb-3 border-bottom">
             <div class="container">
                 <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
@@ -77,6 +78,7 @@
             </div>
         </header>
         <div class="container">
+            {% bootstrap_messages %}
             {% block content %}{% endblock %}
             <hr />
             &copy; 2023. All rights reserved.
