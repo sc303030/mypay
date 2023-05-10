@@ -1,10 +1,11 @@
 django==4.1.7
 django-environ==0.10.0
 django-bootstrap5==23.1
-iamport-rest-client=0.9.0
-pillow=9.5.0
-requests=2.26.0
-sorl-thumbnail=12.9.0
+iamport-rest-client==0.9.0
+pillow==9.5.0
+requests==2.26.0
+sorl-thumbnail==12.9.0
+django-widget-tweaks==1.4.12
 
 django-debug-toolbar==4.0.0
 
