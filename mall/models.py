@@ -139,6 +139,9 @@ class Order(TimeStampedModel):
         OrderedProduct.objects.bulk_create(ordered_product_list)
         return order
 
+    class Meta:
+        ordering = ["-pk"]
+
 
 class OrderedProduct(TimeStampedModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, db_constraint=False)

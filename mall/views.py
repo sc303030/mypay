@@ -80,6 +80,12 @@ def order_new(request):
 
 
 @login_required
+def order_list(request):
+    order_qs = Order.objects.all().filter(user=request.user)
+    return render(request, "mall/order_list.html", {"order_list": order_qs})
+
+
+@login_required
 def order_pay(request, pk):
     order = get_object_or_404(Order, pk=pk, user=request.user)
 
