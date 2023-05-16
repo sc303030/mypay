@@ -92,7 +92,7 @@ def order_pay(request, pk):
     if not order.can_pay():
         messages.error(request, "현재 결제를 할 수 없는 주문입니다.")
         return redirect(order)
-        # return redirect("order_detail", order.pk)  # TODO: order_detail 구현
+
     payment = OrderPayment.create_by_order(order)
     payment_props = {
         "merchant_uid": payment.merchant_uid,
@@ -117,7 +117,6 @@ def order_check(request, order_pk, payment_pk):
     payment = get_object_or_404(OrderPayment, pk=payment_pk, order__pk=order_pk)
     payment.update()
     return redirect(payment.order)
-    # return redirect("order_detail", order_pk)
 
 
 @login_required
