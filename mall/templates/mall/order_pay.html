@@ -1,14 +1,21 @@
 {% extends 'mall/base.html' %}
-{% block  content %}
-    <h2>결제</h2>
+{% block  content %}<h2>결제</h2>{% endblock %}
+{% block extra-script %}
+    {{ payment_props|json_script:'payment-props' }}
+    <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+    <script>
+        (function(){
+            const IMP = window.IMP;
+            const next_url = "{{ next_url }}";
+            IMP.init("{{ portone_shop_id }}");
 
-    {{ payment.name }}
-    <br />
-    {{ payment.desired_amount }}
-    {{ payment.pay_method }}
-    <br />
-    {{ payment.buyer_name }}
-    <br />
-    {{ payment.buyer_email }}
-    <br />
+            const json_string = document.querySelector('#payment-props').textContent;
+            const props = JSON.parse(json_string);
+
+            IMP.request_pay(props, (res)=>{
+                location.href = next_url;
+            })
+        })();
+
+    </script>
 {% endblock %}

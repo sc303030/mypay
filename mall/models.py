@@ -7,6 +7,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint, QuerySet
 from django.http import Http404
+from django.urls import reverse
 from django.utils.functional import cached_property
 from iamport import Iamport
 from model_utils.models import TimeStampedModel
@@ -100,6 +101,9 @@ class Order(TimeStampedModel):
     )
     product_set = models.ManyToManyField(Product, through="OrderedProduct", blank=False)
 
+    def get_absolute_url(self) -> str:
+        return reverse("order_detail", args=[self.pk])
+
     def can_pay(self) -> bool:
         return self.status in (self.Status.REQUESTED, self.Status.FAILED_PAYMENT)
 
@@ -170,6 +174,10 @@ class AbstractPortonePayment(models.Model):
         "결제성공 여부", default=False, db_index=True, editable=False
     )
 
+    @property
+    def merchant_uid(self):
+        return str(self.uid)
+
     @cached_property
     def api(self):
         return Iamport(
@@ -178,7 +186,7 @@ class AbstractPortonePayment(models.Model):
 
     def update(self):
         try:
-            self.api.find(merchant_uid=self.uid)
+            self.meta = self.api.find(merchant_uid=self.merchant_uid)
         except (Iamport.ResponseError, Iamport.HttpError) as e:
             logger.error(str(e))
             raise Http404("포트원에서 결제내역을 찾을 수 없습니다.")
@@ -194,12 +202,23 @@ class AbstractPortonePayment(models.Model):
 class OrderPayment(AbstractPortonePayment):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, db_constraint=False)
 
+    def update(self):
+        super().update()
+        if self.is_paid_ok:
+            self.order.status = Order.Status.PAID
+            self.order.save()
+            # 다수의 결제 시도
+            self.order.orderpayment_set.exclude(pk=self.pk).delete()
+        elif self.pay_status in (self.PayStatus.CANCELED, self.PayStatus.FAILED):
+            self.order.status = Order.Status.FAILED_PAYMENT
+            self.order.save()
+
     @classmethod
     def create_by_order(cls, order: Order) -> "OrderPayment":
         return cls.objects.create(
             order=order,
             name=order.name,
             desired_amount=order.total_amount,
-            buyer_name=order.user.get_full_name(),
+            buyer_name=order.user.get_full_name() or order.user.username,
             buyer_email=order.user.email,
         )
